@@ -1,0 +1,5 @@
+click==7.1.2
+peewee==3.14.0
+requests==2.25.1
+rows===-0.4.2-dev-b60ecffd-
+python-decouple==3.4
