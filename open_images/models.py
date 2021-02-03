@@ -7,7 +7,7 @@ import requests
 
 database = SqliteDatabase(config('SQLITE_DB', default='./data/db.sqlite3'))
 
-IMG_DOWNLOAD_DIR = Path(config('IMAGES_DOWNLOAD_DIR', default='./data/images/downloaded'))
+IMG_DOWNLOAD_DIR = Path(config('IMAGES_DOWNLOAD_DIR', default='./data/images'))
 IMG_DOWNLOAD_DIR.mkdir(exist_ok=True, parents=True)
 
 
@@ -87,8 +87,20 @@ class TrainAnnotationImage(BaseModel):
         return Path(self.originalurl).suffix
 
     @property
+    def images_dir(self):
+        return IMG_DOWNLOAD_DIR / f'{self.imageid}'
+
+    @property
     def image_path(self):
-        return IMG_DOWNLOAD_DIR.joinpath(f'{self.imageid}{self.image_suffix}')
+        return self.images_dir / f'original{self.image_suffix}'
+
+    @property
+    def border_image_path(self):
+        return self.images_dir / 'border.png'
+
+    @property
+    def content_image_path(self):
+        return self.images_dir / 'content.png'
 
     @property
     def image(self):
@@ -106,14 +118,14 @@ class TrainAnnotationImage(BaseModel):
 
     def download(self):
         if not self.image_path.exists():
+            self.images_dir.mkdir(exist_ok=True, parents=True)
+
             response = requests.get(self.originalurl)
             if not response.ok:
                 raise Exception(f'Invalid response: {response.status}')
 
             with open(self.image_path, 'wb') as fd:
                 fd.write(response.content)
-
-            print(f"New image: { self.image_path }")
 
     @classmethod
     def random_image(cls):

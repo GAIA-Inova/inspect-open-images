@@ -1,3 +1,4 @@
+import tqdm
 import itertools
 import sys
 from models import *
@@ -11,14 +12,11 @@ def download_image(id=None):
     else:
         train_image = TrainAnnotationImage.random_image()
 
-    print(train_image.originalurl, train_image.rotation)
     train_image.download()
     return train_image
 
-
-if __name__ == '__main__':
-    train_image = download_image('68690e414ec7cbf1')
-    image = train_image.image
+def gen_images_from_crop(image_path):
+    image = Image.open(image_path)
 
     mask = Image.new("L", image.size, 0)
     for bbox in train_image.bboxes:
@@ -27,12 +25,17 @@ if __name__ == '__main__':
         c1 = (int(c1[0] * w), int(c1[1] * h))
         c2 = (int(c2[0] * w), int(c2[1] * h))
 
-
         draw = ImageDraw.Draw(mask)
         draw.rectangle([c1, c2], fill=255)
-        #draw.rectangle([c1, c2], outline=0, width=2)
-        #train_image.image.crop((itertools.chain(c1, c2)))
-        ImageOps.crop(train_image.image, 40)
 
     image.putalpha(ImageOps.invert(mask))
-    image.show()
+    image.save(str(train_image.border_image_path), 'PNG')
+
+    image.putalpha(mask)
+    image.save(str(train_image.content_image_path), 'PNG')
+
+
+if __name__ == '__main__':
+    for i in tqdm.tqdm(range(1000)):
+        train_image = download_image()
+        gen_images_from_crop(train_image.image_path)
