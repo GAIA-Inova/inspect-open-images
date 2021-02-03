@@ -103,30 +103,22 @@ class TrainAnnotationImage(BaseModel):
         return self.images_dir / 'content.png'
 
     @property
-    def image(self):
-        if not getattr(self, '_image', None):
-            self._image = Image.open(self.image_path)
-        return self._image
-
-    def __del__(self):
-        if self.image_path.exists():
-            self.image.close()
-
-    @property
     def bboxes(self):
         return TrainAnnotationBoundingBox.get_image_bboxes(self.imageid)
 
     def download(self):
         if not self.image_path.exists():
-            self.images_dir.mkdir(exist_ok=True, parents=True)
-
             response = requests.get(self.originalurl)
             if not response.ok:
-                raise Exception(f'Invalid response: {response.status}')
+                raise Exception(f'Invalid response: {response.status_code}')
 
+            self.images_dir.mkdir(exist_ok=True, parents=True)
             with open(self.image_path, 'wb') as fd:
                 fd.write(response.content)
 
     @classmethod
     def random_image(cls):
         return cls.select().order_by(fn.Random()).limit(1).get()
+
+    def __str__(self):
+        return str(self.images_dir)
