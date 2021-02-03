@@ -1,6 +1,7 @@
 from peewee import *
 from decouple import config
 from pathlib import Path
+from PIL import Image
 
 import requests
 
@@ -52,6 +53,17 @@ class TrainAnnotationBoundingBox(BaseModel):
         table_name = 'oidv6_train_annotations_bbox'
         primary_key = False
 
+    @property
+    def coords(self):
+        return (
+            (self.xmin, self.ymin),
+            (self.xmax, self.ymax),
+        )
+
+    @classmethod
+    def get_image_bboxes(cls, image_id):
+        return cls.select().where(cls.imageid == image_id)
+
 class TrainAnnotationImage(BaseModel):
     author = TextField(null=True)
     authorprofileurl = TextField(null=True)
@@ -77,6 +89,20 @@ class TrainAnnotationImage(BaseModel):
     @property
     def image_path(self):
         return IMG_DOWNLOAD_DIR.joinpath(f'{self.imageid}{self.image_suffix}')
+
+    @property
+    def image(self):
+        if not getattr(self, '_image', None):
+            self._image = Image.open(self.image_path)
+        return self._image
+
+    def __del__(self):
+        if self.image_path.exists():
+            self.image.close()
+
+    @property
+    def bboxes(self):
+        return TrainAnnotationBoundingBox.get_image_bboxes(self.imageid)
 
     def download(self):
         if not self.image_path.exists():
