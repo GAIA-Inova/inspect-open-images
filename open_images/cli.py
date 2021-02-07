@@ -44,14 +44,15 @@ def gen_images_from_crop(train_image):
 
 def gen_crops():
     while True:
-        item = IMAGES_QUEUE.get()
-        if item is None:
+        train_image = IMAGES_QUEUE.get()  # uma imagem foi infileirada para processamento
+        if train_image is None:
             break
-        print(f'Working on {item}')
-        gen_images_from_crop(item)
-        print(f'Finished {item}')
-        IMAGES_QUEUE.task_done()
 
+        print(f'Working on {train_image}')
+        gen_images_from_crop(train_image)
+        print(f'Finished {train_image}')
+
+        IMAGES_QUEUE.task_done()
 
 if __name__ == '__main__':
     threads = []
