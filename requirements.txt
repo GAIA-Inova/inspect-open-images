@@ -3,3 +3,5 @@ peewee==3.14.0
 requests==2.25.1
 rows===-0.4.2-dev-b60ecffd-
 python-decouple==3.4
+tqdm==4.56.0
+Pillow==8.1.0
