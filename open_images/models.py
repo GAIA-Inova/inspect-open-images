@@ -54,6 +54,10 @@ class TrainAnnotationBoundingBox(BaseModel):
         primary_key = False
 
     @property
+    def label(self):
+        return BoxAnnotationLabel.get(BoxAnnotationLabel.id == self.labelname).name
+
+    @property
     def coords(self):
         return (
             (self.xmin, self.ymin),

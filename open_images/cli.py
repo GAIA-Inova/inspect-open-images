@@ -27,11 +27,17 @@ def gen_images_from_crop(train_image):
     image = Image.open(train_image.image_path)
 
     mask = Image.new("L", image.size, 0)
-    for bbox in train_image.bboxes:
+
+    for i, bbox in enumerate(train_image.bboxes, start=1):
+        label = bbox.label
         w, h = image.width, image.height
         c1, c2 = bbox.coords
         c1 = (int(c1[0] * w), int(c1[1] * h))
         c2 = (int(c2[0] * w), int(c2[1] * h))
+
+        area = (c1[0], c1[1], c2[0], c2[1])
+        crop = image.crop(area)
+        crop.save(str(train_image.images_dir / f"{i:0>2d}-{label}.png"), 'PNG')
 
         draw = ImageDraw.Draw(mask)
         draw.rectangle([c1, c2], fill=255)
@@ -62,7 +68,9 @@ if __name__ == '__main__':
         threads.append(t)
 
     with ThreadPoolExecutor(max_workers=4) as executor:
-        executor.submit(download_image)
+        ids = [d.name for d in IMG_DOWNLOAD_DIR.iterdir()]
+        for id in ids:
+            executor.submit(download_image, id)
 
     print('joining queue...')
     IMAGES_QUEUE.join()
