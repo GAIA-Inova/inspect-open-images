@@ -1,3 +1,4 @@
+import click
 import tqdm
 import itertools
 import sys
@@ -8,6 +9,15 @@ from PIL import Image, ImageDraw, ImageOps
 from concurrent.futures import ThreadPoolExecutor
 
 IMAGES_QUEUE = queue.Queue()
+
+
+@click.group()
+def command_line_entrypoint():
+    """
+    pyp5js is a command line tool to conver Python 3 code to p5.js.
+    """
+    pass
+
 
 def download_image(id=None):
     if id:
@@ -60,7 +70,11 @@ def gen_crops():
 
         IMAGES_QUEUE.task_done()
 
-if __name__ == '__main__':
+
+@command_line_entrypoint.command('bbox')
+@click.option('--img-id', '-i')
+@click.option('--quantity', '-q', default=5)
+def bbox(quantity, img_id):
     threads = []
     for i in range(32):
         t = threading.Thread(target=gen_crops)
@@ -68,9 +82,8 @@ if __name__ == '__main__':
         threads.append(t)
 
     with ThreadPoolExecutor(max_workers=4) as executor:
-        ids = [d.name for d in IMG_DOWNLOAD_DIR.iterdir()]
-        for id in ids:
-            executor.submit(download_image, id)
+        for i in range(quantity):
+            executor.submit(download_image)
 
     print('joining queue...')
     IMAGES_QUEUE.join()
@@ -79,3 +92,6 @@ if __name__ == '__main__':
         IMAGES_QUEUE.put(None)
     for t in tqdm.tqdm(threads, desc='finishing threads'):
         t.join()
+
+if __name__ == "__main__":
+    command_line_entrypoint()
