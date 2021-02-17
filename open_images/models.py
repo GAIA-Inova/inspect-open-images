@@ -126,3 +126,21 @@ class TrainAnnotationImage(BaseModel):
 
     def __str__(self):
         return str(self.images_dir)
+
+
+class TrainAnnotationsObjectSegmentation(BaseModel):
+    boxid = TextField(null=True)
+    boxxmax = FloatField(null=True)
+    boxxmin = FloatField(null=True)
+    boxymax = FloatField(null=True)
+    boxymin = FloatField(null=True)
+    clicks = TextField(null=True)
+    imageid = TextField(null=True)
+    labelname = TextField(null=True)
+    maskpath = TextField(null=True)
+    predictediou = FloatField(null=True)
+
+    class Meta:
+        table_name = 'train_annotations_object_segmentation'
+        primary_key = False
+

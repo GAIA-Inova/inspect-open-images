@@ -289,3 +289,4 @@ media/
 open_images/data/images/*
 open_images/data/*.csv
 open_images/data/*.tar.gz
+open_images/data/*.zip
