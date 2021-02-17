@@ -18,10 +18,11 @@ $ pyenv virtualenv 3.8.6 inspect-open-images
 $ pyenv activate inspect-open-images
 
 $ pip install -r requirements.txt
-$ python open_images/cli.py
-$ cd open_images
-$ ./cli.py bbox -q 1  # download 1 image to gen the bouding boxes
+$ python open_images/cli.py --help
 ```
+
+Para importar os dados, siga as instruções na página de [descrição
+dos dados](/open_images/data/).
 
 ## Comandos
 

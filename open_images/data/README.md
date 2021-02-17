@@ -1,11 +1,36 @@
-## Descrição dos dados:
+## Descrição dos dados
 
 **Dataset**: Open Images Dataset V6
 
-Arquivos baixados em https://storage.googleapis.com/openimages/web/download.html
+Para importar os dados para o banco de dados você precisa:
 
-Instruções em https://storage.googleapis.com/openimages/web/factsfigures.html
+1. Baixar **todos** os arquivos CSV disponíveis na [página de download](https://storage.googleapis.com/openimages/web/download.html)
+   do dataset;
+2. Garantir que todos os arquivos CSV estejam no diretório `inspect-open-images/open_images/data`,
+   e tenham o mesmo nome e cabeçalho como os outputs de comando `head` abaixo;
+3. Rode o comando abaixo para criar o banco de dados da forma como o código Python espera;
+4. Para mais instruções sobre os dados e organização do dataset,
+   [clique aqui](https://storage.googleapis.com/openimages/web/factsfigures.html);
 
+```
+$ cd open_images/data/
+$ time rows csv2sqlite oidv6-attributes-description.csv oidv6-class-descriptions-boxable.csv oidv6-train-annotations-bbox.csv train-annotations-human-imagelabels-boxable.csv train-annotations-object-segmentation.csv train-images-boxable-with-rotation.csv db.sqlite3 --samples 30
+```
+
+A saída esperada é algo como o log abaixo:
+
+```
+[oidv6-attributes-description.csv -> db.sqlite3#oidv6_attributes_description]: 15.0 rows [00:00, 10.5k rows/s]
+[oidv6-class-descriptions-boxable.csv -> db.sqlite3#oidv6_class_descriptions_boxable]: 601 rows [00:00, 300k rows/s]
+[oidv6-train-annotations-bbox.csv -> db.sqlite3#oidv6_train_annotations_bbox]: 14.6M rows [03:39, 66.7k rows/s]
+[train-annotations-human-imagelabels-boxable.csv -> db.sqlite3#train_annotations_human_imagelabels_boxable]: 9.00M rows [00:39, 228k rows/s]
+[train-annotations-object-segmentation.csv -> db.sqlite3#train_annotations_object_segmentation]: 2.69M rows [00:29, 92.4k rows/s]
+[train-images-boxable-with-rotation.csv -> db.sqlite3#train_images_boxable_with_rotation]: 1.74M rows [00:21, 80.2k rows/s]
+
+real	5m12,243s
+user	5m6,008s
+sys	0m4,282s
+```
 
 ### oidv6-attributes-description.csv
 
