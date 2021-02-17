@@ -1,7 +1,10 @@
+import io
+import zipfile
 from peewee import *
 from decouple import config
 from pathlib import Path
 from PIL import Image
+from cached_property import cached_property
 
 import requests
 
@@ -9,6 +12,7 @@ database = SqliteDatabase(config('SQLITE_DB', default='./data/db.sqlite3'))
 
 IMG_DOWNLOAD_DIR = Path(config('IMAGES_DOWNLOAD_DIR', default='./data/images'))
 IMG_DOWNLOAD_DIR.mkdir(exist_ok=True, parents=True)
+TRAIN_DATA_DIR = Path('./data')
 
 
 class UnknownField(object):
@@ -98,6 +102,10 @@ class TrainAnnotationImage(BaseModel):
     def image_path(self):
         return self.images_dir / f'original{self.image_suffix}'
 
+    @cached_property
+    def image(self):
+        return Image.open(self.image_path)
+
     @property
     def border_image_path(self):
         return self.images_dir / 'border.png'
@@ -124,6 +132,10 @@ class TrainAnnotationImage(BaseModel):
     def random_image(cls):
         return cls.select().order_by(fn.Random()).limit(1).get()
 
+    @classmethod
+    def by_id(cls, img_id):
+        return cls.get(cls.imageid == img_id)
+
     def __str__(self):
         return str(self.images_dir)
 
@@ -144,3 +156,21 @@ class TrainAnnotationsObjectSegmentation(BaseModel):
         table_name = 'train_annotations_object_segmentation'
         primary_key = False
 
+    @cached_property
+    def train_image(self):
+        return TrainAnnotationImage.by_id(self.imageid)
+
+    @property
+    def index(self):
+        return self.imageid[0]
+
+    @property
+    def mask_image(self):
+        zipname = TRAIN_DATA_DIR / f'train-masks-{self.index}.zip'
+        imgs_zip = zipfile.ZipFile(zipname, 'r')
+        img_data = imgs_zip.read(self.maskpath)
+        return Image.open(io.BytesIO(img_data))
+
+    @classmethod
+    def random(cls):
+        return cls.select().order_by(fn.Random()).limit(1).get()

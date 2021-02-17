@@ -21,9 +21,9 @@ def command_line_entrypoint():
     pass
 
 
-def download_image(id=None):
+def download_image(img_id=None):
     if id:
-        train_image = TrainAnnotationImage.get(TrainAnnotationImage.imageid == id)
+        train_image = TrainAnnotationImage.by_id(img_id)
     else:
         train_image = TrainAnnotationImage.random_image()
 
@@ -36,7 +36,7 @@ def download_image(id=None):
         return None
 
 def gen_images_from_crop(train_image):
-    image = Image.open(train_image.image_path)
+    image = train_image.image
 
     mask = Image.new("L", image.size, 0)
 
@@ -109,6 +109,22 @@ def bbox(quantity, img_id):
         IMAGES_QUEUE.put(None)
     for t in tqdm.tqdm(threads, desc='finishing threads'):
         t.join()
+
+
+@command_line_entrypoint.command('segmentation')
+@click.option('--img-id', '-i')
+@click.option('--quantity', '-q', default=5)
+def gen_segmentation_images(quantity, img_id):
+    segmentation = TrainAnnotationsObjectSegmentation.random()
+
+    mask = segmentation.mask_image
+    mask.show()
+    train_image = download_image(segmentation.imageid)
+    image = train_image.image
+
+    image.putalpha(ImageOps.invert(mask))
+    image.save(str(train_image.images_dir / 'seg.png'), 'PNG')
+
 
 if __name__ == "__main__":
     command_line_entrypoint()
