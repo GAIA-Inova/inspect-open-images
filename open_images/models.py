@@ -169,8 +169,13 @@ class TrainAnnotationsObjectSegmentation(BaseModel):
         zipname = TRAIN_DATA_DIR / f'train-masks-{self.index}.zip'
         imgs_zip = zipfile.ZipFile(zipname, 'r')
         img_data = imgs_zip.read(self.maskpath)
-        return Image.open(io.BytesIO(img_data))
+        return Image.open(io.BytesIO(img_data)).convert('L')
 
     @classmethod
-    def random(cls):
-        return cls.select().order_by(fn.Random()).limit(1).get()
+    def from_random_image(cls):
+        seg = cls.select().order_by(fn.Random()).limit(1).get()
+        return cls.select().where(cls.imageid == seg.imageid)
+
+    @property
+    def label(self):
+        return BoxAnnotationLabel.get(BoxAnnotationLabel.id == self.labelname).name

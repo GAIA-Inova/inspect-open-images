@@ -115,15 +115,20 @@ def bbox(quantity, img_id):
 @click.option('--img-id', '-i')
 @click.option('--quantity', '-q', default=5)
 def gen_segmentation_images(quantity, img_id):
-    segmentation = TrainAnnotationsObjectSegmentation.random()
+    segmentations = TrainAnnotationsObjectSegmentation.from_random_image()
+    for i, segmentation in enumerate(segmentations, start=1):
+        label = segmentation.label
 
-    mask = segmentation.mask_image
-    mask.show()
-    train_image = download_image(segmentation.imageid)
-    image = train_image.image
+        mask = segmentation.mask_image
+        train_image = download_image(segmentation.imageid)
+        image = train_image.image
 
-    image.putalpha(ImageOps.invert(mask))
-    image.save(str(train_image.images_dir / 'seg.png'), 'PNG')
+        if mask.size == image.size:
+            image.putalpha(mask)
+            image.save(str(train_image.images_dir / f'seg-{i}-{label}.png'), 'PNG')
+        else:
+            print('Maks and image sizes differ')
+            break
 
 
 if __name__ == "__main__":
