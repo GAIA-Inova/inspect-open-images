@@ -5,35 +5,31 @@ import tqdm
 import itertools
 import sys
 import threading, queue
+from requests.exceptions import HTTPError
 from models import *
 from decouple import config
 from PIL import Image, ImageDraw, ImageOps
 from concurrent.futures import ThreadPoolExecutor
 
-IMAGES_QUEUE = queue.Queue()
 
 
 @click.group()
 def command_line_entrypoint():
     """
-    pyp5js is a command line tool to conver Python 3 code to p5.js.
+    Ferramenta pra explorar imagens do dataset Open Images V6
     """
     pass
 
 
 def download_image(img_id=None):
-    if id:
+    if img_id:
         train_image = TrainAnnotationImage.by_id(img_id)
     else:
         train_image = TrainAnnotationImage.random_image()
 
-    try:
-        print(f'Downloading {train_image}')
-        train_image.download()
-        IMAGES_QUEUE.put(train_image)
-        return train_image
-    except:
-        return None
+    print(f'Baixando {train_image}')
+    train_image.download()
+    return train_image
 
 def gen_images_from_crop(train_image):
     image = train_image.image
@@ -60,18 +56,6 @@ def gen_images_from_crop(train_image):
     image.putalpha(mask)
     image.save(str(train_image.content_image_path), 'PNG')
 
-def gen_crops():
-    while True:
-        train_image = IMAGES_QUEUE.get()  # uma imagem foi infileirada para processamento
-        if train_image is None:
-            break
-
-        print(f'Working on {train_image}')
-        gen_images_from_crop(train_image)
-        print(f'Finished {train_image}')
-
-        IMAGES_QUEUE.task_done()
-
 
 @command_line_entrypoint.command('bbox')
 @click.option('--img-id', '-i')
@@ -93,22 +77,22 @@ def bbox(quantity, img_id):
     arquivo nomeado `01-person.png` coa mesma dimensão da área da anotação.
     """
     threads = []
-    for i in range(32):
-        t = threading.Thread(target=gen_crops)
-        t.start()
-        threads.append(t)
+    if img_id:
+        train_image = download_image(img_id=img_id)
+        print(f'Gerando {train_image}')
+        gen_images_from_crop(train_image)
+        print(f'FINALIZADO {train_image}')
+        return
 
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        for i in range(quantity):
-            executor.submit(download_image)
 
-    print('joining queue...')
-    IMAGES_QUEUE.join()
-
-    for i in threads:
-        IMAGES_QUEUE.put(None)
-    for t in tqdm.tqdm(threads, desc='finishing threads'):
-        t.join()
+    for i in range(quantity):
+        try:
+            train_image = download_image()
+            print(f'Gerando {train_image}')
+            gen_images_from_crop(train_image)
+            print(f'FINALIZADO {train_image}')
+        except HTTPError as e:
+            print(f"Erro: {e}")
 
 
 @command_line_entrypoint.command('segmentation')
@@ -127,7 +111,7 @@ def gen_segmentation_images(quantity, img_id):
             image.putalpha(mask)
             image.save(str(train_image.images_dir / f'seg-{i}-{label}.png'), 'PNG')
         else:
-            print('Maks and image sizes differ')
+            print('Tamanho de máscaras e imagem diferentes')
             break
 
 
