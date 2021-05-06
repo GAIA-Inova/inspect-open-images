@@ -121,8 +121,7 @@ class TrainAnnotationImage(BaseModel):
     def download(self):
         if not self.image_path.exists():
             response = requests.get(self.originalurl)
-            if not response.ok:
-                raise Exception(f'Invalid response: {response.status_code}')
+            response.raise_for_status()
 
             self.images_dir.mkdir(exist_ok=True, parents=True)
             with open(self.image_path, 'wb') as fd:
