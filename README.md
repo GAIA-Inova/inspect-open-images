@@ -14,7 +14,7 @@ $ git clone git@github.com:SEU-USUARIO/inspect-open-images.git
 
 # Crie um ambiente virtual python usando a ferramente que preferir
 # Aqui vou demostrar como fazer utilizando o pyenv
-$ pyenv virtualenv 3.8.6 inspect-open-images
+$ pyenv virtualenv 3.9.5 inspect-open-images
 $ pyenv activate inspect-open-images
 
 $ pip install -r requirements.txt
